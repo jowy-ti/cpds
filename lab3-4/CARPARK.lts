@@ -1,0 +1,20 @@
+CARPARKCONTROL(N=4) = SPACES[N],
+SPACES[i:0..N] = (when(i>0) arrive->SPACES[i-1]
+                 |when(i<N) depart->SPACES[i+1]).
+
+ARRIVALS   = (arrive->ARRIVALS).
+DEPARTURES = (depart->DEPARTURES).
+
+||CARPARK = (ARRIVALS||CARPARKCONTROL(4)||DEPARTURES).
+
+property OVERFLOW(N=4) = OVERFLOW[0],
+OVERFLOW[i:0..N] = (arrive -> OVERFLOW[i+1] | depart -> OVERFLOW[i-1]).
+
+||CHECK_CARPARK  = (OVERFLOW(4) || CARPARKCONTROL(4)).
+||CHECK_CARPARK3 = (OVERFLOW(3) || CARPARKCONTROL(4)).
+
+progress ENTER = {arrive}
+
+||LIVE_CARPARK = CARPARK >> {depart}.
+
+progress DEPART = {depart}

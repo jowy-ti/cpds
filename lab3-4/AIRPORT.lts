@@ -1,0 +1,37 @@
+const RMAX = 2      // number of runways (the exercise asks for 2)
+const FMAX = 6      // number of flights
+
+range R = 1..RMAX
+range F = 1..FMAX
+
+const False = 0
+const True  = 1
+range Bool  = False..True
+
+FLIGHT = (request -> WAIT),
+WAIT   = (tower.allocate -> tower.takeoff -> FLY),
+FLY    = (fly -> FLIGHT).
+
+CONTROL_RUNWAY = (allocate -> takeoff -> CONTROL_RUNWAY).
+
+CONTROL(N=RMAX) = CONTROL[N],
+CONTROL[i:0..N] = ( when(i>0) allocate -> CONTROL[i-1]
+                  | when(i<N) takeoff  -> CONTROL[i+1] ).
+
+||AIRPORT = (f[1..FMAX]:FLIGHT || {f[1..FMAX]}::tower:CONTROL(RMAX)).
+
+property MUTEX(N=RMAX) = MUTEX[0],
+MUTEX[i:0..N] = ( f[j:1..FMAX].tower.allocate -> MUTEX[i+1]
+                | f[j:1..FMAX].tower.takeoff  -> MUTEX[i-1] ).
+
+||CHECK = (AIRPORT || MUTEX(RMAX)).
+
+progress TAKE_OFF[i:1..FMAX] = f[i].tower.takeoff
+
+FLIGHT_STRESS = (request -> WAIT_STRESS),
+WAIT_STRESS   = (tower.allocate -> tower.takeoff -> FLIGHT_STRESS).
+
+||AIRPORT_STRESS = (f[1..FMAX]:FLIGHT_STRESS
+                   || {f[1..FMAX]}::tower:CONTROL(RMAX)).
+
+||CHECK_STRESS = (AIRPORT_STRESS || MUTEX(RMAX)).
